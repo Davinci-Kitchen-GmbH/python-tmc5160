@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "tmc5160"
+version = "0.1.0"
+description = ""
+authors = ["betaboon <betaboon@0x80.ninja>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+spidev = "^3.5"
+rpi-gpio = "^0.7.0"
+construct = "^2.10.56"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+dephell = "^0.8.3"
+
+[tool.dephell.main]
+from = {format = "poetry", path = "pyproject.toml"}
+to = {format = "setuppy", path = "setup.py"}
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
