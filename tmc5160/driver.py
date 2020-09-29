@@ -1,6 +1,6 @@
 from collections import namedtuple
 from enum import Enum
-from time import sleep
+import asyncio
 import logging
 
 import RPi.GPIO as GPIO
@@ -262,7 +262,7 @@ class TMC5160:
     def get_velocity(self):
         return self.registers.VACTUAL
 
-    def set_velocity(self, direction, vmax=None, amax=None, wait=False):
+    async def set_velocity(self, direction, vmax=None, amax=None, wait=False):
         if vmax is not None:
             self.registers.VMAX = vmax
         if amax is not None:
@@ -272,25 +272,25 @@ class TMC5160:
         elif direction is TMC5160.Direction.RIGHT:
             self.registers.RAMPMODE = 2  # velocity-mode: negative-VMAX
         if wait:
-            self.wait_velocity_reached()
+            await self.wait_velocity_reached()
 
-    def wait_velocity_reached(self):
+    async def wait_velocity_reached(self):
         while not self.registers.RAMP_STAT.velocity_reached:
-            sleep(0.1)
+            await asyncio.sleep(0.1)
 
-    def stop_motor(self, wait=False):
+    async def stop_motor(self, wait=False):
         self.registers.VMAX = 0
         if wait:
-            self.wait_motor_stopped()
+            await self.wait_motor_stopped()
 
-    def wait_motor_stopped(self):
+    async def wait_motor_stopped(self):
         while not self.registers.RAMP_STAT.vzero:
-            sleep(0.1)
+            await asyncio.sleep(0.1)
 
     def get_actual_position(self):
         return self.registers.XACTUAL
 
-    def set_target_position(self, position, wait=False):
+    async def set_target_position(self, position, wait=False):
         self.registers.RAMPMODE = "position"
         # Position range is from -2^31 to +(2^31)-1
         maximum_position = (2 ** 31) - 1
@@ -304,8 +304,8 @@ class TMC5160:
             logger.warning("Minimum position reached! Stopped at min value.")
         self.registers.XTARGET = position
         if wait:
-            self.wait_target_position_reached()
+            await self.wait_target_position_reached()
 
-    def wait_target_position_reached(self):
+    async def wait_target_position_reached(self):
         while not self.registers.RAMP_STAT.position_reached:
-            sleep(0.1)
+            await asyncio.sleep(0.1)
