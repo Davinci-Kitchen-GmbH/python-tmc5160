@@ -1,3 +1,4 @@
+import asyncio
 import time
 import logging
 
@@ -32,24 +33,24 @@ def setup_spi():
     return spi
 
 
-def do_motor_stuff(spi):
+async def do_motor_stuff(spi):
     logger.debug("Motor setup")
     m1 = Motor(spidev=spi, chip_select_pin=8)
     m2 = Motor(spidev=spi, chip_select_pin=24)
-    m1.set_velocity(direction=Motor.Direction.LEFT, vmax=1000)
-    m2.set_velocity(direction=Motor.Direction.LEFT, vmax=1000000)
+    await m1.set_velocity(direction=Motor.Direction.LEFT, vmax=1000)
+    await m2.set_velocity(direction=Motor.Direction.LEFT, vmax=1000000)
     time.sleep(5)
-    m1.stop_motor()
+    await m1.stop_motor()
     time.sleep(1)
-    m2.stop_motor()
+    await m2.stop_motor()
 
 
-def main():
+async def main():
     setup_gpio()
     spi = setup_spi()
-    do_motor_stuff(spi)
+    await do_motor_stuff(spi)
     cleanup_gpio()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
