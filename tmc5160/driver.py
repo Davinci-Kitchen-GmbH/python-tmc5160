@@ -2,6 +2,7 @@ from collections import namedtuple
 from enum import Enum
 import asyncio
 import logging
+from typing import Literal
 
 import RPi.GPIO as GPIO
 
@@ -185,10 +186,6 @@ class TMC5160:
         #  PWM_AUTO =      Register(0x72, RegisterAccessMode.R,    structs.PWM_AUTO)
         #  LOST_STEPS =    Register(0x73, RegisterAccessMode.R,    structs.LOST_STEPS)
 
-    class Direction(Enum):
-        LEFT = 1
-        RIGHT = 2
-
     def __init__(self, spidev, chip_select_pin, enable_pin=None, apply_defaults=True):
         self.spidev = spidev
         self.chip_select_pin = chip_select_pin
@@ -262,15 +259,20 @@ class TMC5160:
     def get_velocity(self):
         return self.registers.VACTUAL
 
-    async def set_velocity(self, direction, vmax=None, amax=None, wait=False):
+    async def set_velocity(
+        self,
+        rampmode: Literal["positive", "negative"],
+        vmax=None,
+        amax=None,
+        wait=False,
+    ):
+        if rampmode != "positive" and rampmode != "negative":
+            raise ValueError("rampmode %s not suported for set_velocity", rampmode)
+        self.registers.RAMPMODE = rampmode
         if vmax is not None:
             self.registers.VMAX = vmax
         if amax is not None:
             self.registers.AMAX = amax
-        if direction is TMC5160.Direction.LEFT:
-            self.registers.RAMPMODE = 1  # velocity-mode: positive-VMAX
-        elif direction is TMC5160.Direction.RIGHT:
-            self.registers.RAMPMODE = 2  # velocity-mode: negative-VMAX
         if wait:
             await self.wait_velocity_reached()
 
